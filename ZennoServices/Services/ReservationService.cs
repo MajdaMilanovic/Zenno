@@ -6,13 +6,39 @@ using ZennoServices.Interfaces;
 
 namespace ZennoServices.Services
 {
-    public class ReservationService : IReservationService
+    public class ReservationResponse
     {
-        private readonly ApplicationDbContext _context;
+        public int Id { get; set; }
+        public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        public decimal TotalPrice { get; set; }
+        public ReservationStatus Status { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+        public int RoomId { get; set; }
+        public Room Room { get; set; }
+    }
 
-        public ReservationService(ApplicationDbContext context)
+    public class ReservationService : BaseService<ReservationResponse, ReservationSearchObject, Reservation>, IReservationService
+    {
+        public ReservationService(ApplicationDbContext context) : base(context)
         {
-            _context = context;
+        }
+
+        protected override ReservationResponse MapToResponse(Reservation entity)
+        {
+            return new ReservationResponse
+            {
+                Id = entity.Id,
+                CheckInDate = entity.CheckInDate,
+                CheckOutDate = entity.CheckOutDate,
+                TotalPrice = entity.TotalPrice,
+                Status = entity.Status,
+                UserId = entity.UserId,
+                User = entity.User,
+                RoomId = entity.RoomId,
+                Room = entity.Room
+            };
         }
 
         public async Task<List<Reservation>> GetAllAsync()

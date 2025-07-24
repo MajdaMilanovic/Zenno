@@ -6,13 +6,37 @@ using ZennoServices.Interfaces;
 
 namespace ZennoServices.Services
 {
-    public class ReviewService : IReviewService
+    public class ReviewResponse
     {
-        private readonly ApplicationDbContext _context;
+        public int Id { get; set; }
+        public int Rating { get; set; }
+        public string Comment { get; set; }
+        public DateTime DatePosted { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+        public int RoomId { get; set; }
+        public Room Room { get; set; }
+    }
 
-        public ReviewService(ApplicationDbContext context)
+    public class ReviewService : BaseService<ReviewResponse, ReviewSearchObject, Review>, IReviewService
+    {
+        public ReviewService(ApplicationDbContext context) : base(context)
         {
-            _context = context;
+        }
+
+        protected override ReviewResponse MapToResponse(Review entity)
+        {
+            return new ReviewResponse
+            {
+                Id = entity.Id,
+                Rating = entity.Rating,
+                Comment = entity.Comment,
+                DatePosted = entity.DatePosted,
+                UserId = entity.UserId,
+                User = entity.User,
+                RoomId = entity.RoomId,
+                Room = entity.Room
+            };
         }
 
         public async Task<List<Review>> GetAllAsync()
@@ -49,7 +73,6 @@ namespace ZennoServices.Services
 
             existingReview.Rating = review.Rating;
             existingReview.Comment = review.Comment;
-            // Don't update DatePosted, UserId, or RoomId as these shouldn't change
 
             await _context.SaveChangesAsync();
             return existingReview;

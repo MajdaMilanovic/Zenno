@@ -6,13 +6,29 @@ using ZennoServices.Interfaces;
 
 namespace ZennoServices.Services
 {
-    public class ServiceService : IServiceService
+    public class ServiceResponse
     {
-        private readonly ApplicationDbContext _context;
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public List<ReservationServiceMapping> ReservationServices { get; set; }
+    }
 
-        public ServiceService(ApplicationDbContext context)
+    public class ServiceService : BaseService<ServiceResponse, ServiceSearchObject, Service>, IServiceService
+    {
+        public ServiceService(ApplicationDbContext context) : base(context)
         {
-            _context = context;
+        }
+
+        protected override ServiceResponse MapToResponse(Service entity)
+        {
+            return new ServiceResponse
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Price = entity.Price,
+                ReservationServices = entity.ReservationServices.ToList()
+            };
         }
 
         public async Task<List<Service>> GetAllAsync()
@@ -112,7 +128,6 @@ namespace ZennoServices.Services
             _context.ReservationServices.Add(reservationService);
             await _context.SaveChangesAsync();
 
-            // Update reservation total price
             reservation.TotalPrice += reservationService.Price;
             await _context.SaveChangesAsync();
         }
@@ -127,7 +142,6 @@ namespace ZennoServices.Services
                 var reservation = await _context.Reservations.FindAsync(reservationId);
                 if (reservation != null)
                 {
-                    // Update reservation total price
                     reservation.TotalPrice -= reservationService.Price;
                 }
 

@@ -6,21 +6,41 @@ using ZennoServices.Interfaces;
 
 namespace ZennoServices.Services
 {
-    public class UserService : IUserService
+    public class UserResponse
     {
-        private readonly ApplicationDbContext _context;
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public List<Reservation> Reservations { get; set; }
+        public List<Review> Reviews { get; set; }
+    }
 
-        public UserService(ApplicationDbContext context)
+    public class UserService : BaseService<UserResponse, UserSearchObject, User>, IUserService
+    {
+        public UserService(ApplicationDbContext context) : base(context)
         {
-            _context = context;
+        }
+
+        protected override UserResponse MapToResponse(User entity)
+        {
+            return new UserResponse
+            {
+                Id = entity.Id,
+                Username = entity.Username,
+                Email = entity.Email,
+                Role = entity.Role,
+                Reservations = entity.Reservations.ToList(),
+                Reviews = entity.Reviews.ToList()
+            };
         }
 
         public async Task<List<User>> GetAllAsync()
         {
-            return await _context.Users
+            var query = _context.Users
                 .Include(u => u.Reservations)
-                .Include(u => u.Reviews)
-                .ToListAsync();
+                .Include(u => u.Reviews);
+            return await query.ToListAsync();
         }
 
         public async Task<User?> GetByIdAsync(int id)
@@ -41,7 +61,6 @@ namespace ZennoServices.Services
 
         public async Task<User> CreateAsync(User user)
         {
-            // In a real application, you would hash the password here
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
@@ -56,10 +75,8 @@ namespace ZennoServices.Services
 
             existingUser.Username = user.Username;
             existingUser.Email = user.Email;
-            // Only update password if it's provided
             if (!string.IsNullOrEmpty(user.PasswordHash))
             {
-                // In a real application, you would hash the password here
                 existingUser.PasswordHash = user.PasswordHash;
             }
             existingUser.Role = user.Role;
